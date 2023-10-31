@@ -1,46 +1,112 @@
 /* eslint-disable @typescript-eslint/no-unused-vars */
 import { useState } from "react";
-import { FormLoginControls } from "./controls";
+import { FormLoginControls, UserFormLogin } from "./controls";
 
 export const FormLogin = () => {
-  // eslint-disable-next-line @typescript-eslint/no-unused-vars
-  // const invalidClass: string = "invalid:border-red-400 invalid:ring-red-400 invalid:ring-2 invalid:ring-inset";
-
   const emailRegex = /^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$/;
 
-  const [formLogin, setFormLogin] = useState({
-    email: "",
-    password: "",
-    nombre: "",
+  const [formLogin, setFormLogin] = useState<UserFormLogin>({
+    email: {
+      touched: false,
+      value: undefined,
+      error: undefined,
+    },
+    password: {
+      touched: false,
+      value: undefined,
+      error: undefined,
+    },
+    name: {
+      touched: false,
+      value: undefined,
+      error: undefined,
+    },
   });
 
   const [isSamePass, setIsSamePass] = useState<boolean>(false);
   const [isValidEmail, setValidEmail] = useState<boolean>(false);
 
   const handleControlName = (e: React.ChangeEvent<HTMLInputElement>) => {
-    if (e.target.value) {
-      setFormLogin({ ...formLogin, nombre: e.target.value });
+    const { value } = e.target;
+
+    if (value === "") {
+      setFormLogin({
+        ...formLogin,
+        name: {
+          touched: true,
+          value: value,
+          error: "Este campo es requerido",
+        },
+      });
+    }
+    if (value) {
+      setFormLogin({
+        ...formLogin,
+        name: {
+          touched: true,
+          value: value,
+          error: undefined,
+        },
+      });
     }
   };
 
   const handleControlEmail = (e: React.ChangeEvent<HTMLInputElement>) => {
+    if (formLogin.email.touched && e.target.value === "") {
+      setFormLogin({
+        ...formLogin,
+        email: {
+          value: undefined,
+          touched: true,
+          error: "Este campo es requerido",
+        },
+      });
+      return;
+    }
     if (!isValidEmailPattern(e.target.value)) {
-      console.log("Correo no valido");
-      setValidEmail(false);
+      setFormLogin({
+        ...formLogin,
+        email: {
+          value: undefined,
+          touched: true,
+          error: "Correo no valido",
+        },
+      });
       return;
     }
     if (e.target.value) {
       setValidEmail(true);
-      setFormLogin({ ...formLogin, email: e.target.value });
+      setFormLogin({
+        ...formLogin,
+        email: {
+          touched: true,
+          value: e.target.value,
+          error: undefined,
+        },
+      });
     }
   };
 
   const handleControlPassword = (e: React.ChangeEvent<HTMLInputElement>) => {
     if (e.target.value.length < 6) {
-      console.log("contraseña debe de tener mas de 6 caracteres");
+      setFormLogin({
+        ...formLogin,
+        password: {
+          touched: true,
+          value: e.target.value,
+          error: "La contraseña debe tener 6 caracteres",
+        },
+      });
       return;
     }
-    setFormLogin({ ...formLogin, password: e.target.value });
+    setFormLogin({
+      ...formLogin,
+      password: {
+        touched: true,
+        value: e.target.value,
+        error: undefined,
+      },
+    });
   };
 
   const handleControl = (e: React.ChangeEvent<HTMLInputElement>, control: FormLoginControls) => {
@@ -58,7 +124,7 @@ export const FormLogin = () => {
   const isValidEmailPattern = (email: string) => (email.match(emailRegex) ? true : false);
 
   const onSamePassword = (e: React.ChangeEvent<HTMLInputElement>) => {
-    setIsSamePass(e.target.value === formLogin.password ? true : false);
+    setIsSamePass(e.target.value === formLogin.password.value ? true : false);
   };
 
   const register = (e: React.FormEvent<HTMLFormElement>) => {
@@ -84,7 +150,9 @@ export const FormLogin = () => {
           autoComplete="off"
           required
         />
-        <span className="mt-2 hidden text-sm text-red-400">Este campo es valido</span>
+        {formLogin.name.error && formLogin.name.touched ? (
+          <span className="mt-2 text-sm text-red-400">Este campo es valido</span>
+        ) : null}
       </div>
       {/* Correo */}
       <div className="mb-4 text-start">
@@ -101,8 +169,8 @@ export const FormLogin = () => {
           autoComplete="off"
           required
         />
-        {!isValidEmail ? (
-          <span className="mt-2 text-sm text-red-400 w-full">Ingrese un correo electronico valido</span>
+        {formLogin.email.error && formLogin.email.touched ? (
+          <span className="mt-2 text-sm text-red-400 w-full">{formLogin.email?.error}</span>
         ) : null}
       </div>
       {/* Password */}
@@ -143,7 +211,7 @@ export const FormLogin = () => {
           required
           pattern=".{6,}"
         />
-        <span className="mt-2 hidden text-sm text-red-400">Las Contraseñas no son iguales </span>
+        {!isSamePass ? <span className="mt-2 hidden text-sm text-red-400">Las Contraseñas no son iguales </span> : null}
       </div>
 
       <div className="mb-4">
